@@ -2,7 +2,7 @@
 title: "Self-reported life satisfaction, 2011 to 2023"
 subtitle: "Replicating the Our World in Data Grapher"
 author: "Jessica Zafra" # Remember to add your name!
-date: "24-07-2024"
+date: "2024-07-24"
 theme: united
 ---
 
@@ -65,13 +65,20 @@ table <- cantril %>%
   filter(year %in% c(2011, 2023)) %>% 
   pivot_wider(names_from = year,
               values_from = cantril_score) %>% 
+  filter(code != "NA" & country != "World") %>% 
   select(-code) %>% 
   mutate(abs_change = round(`2023` - `2011`,2),
          rel_change = scales::percent(round(abs_change/`2011`,2)),
          `2011` = round(`2011`,2),
          `2023` = round(`2023`,2))
 
-reactable(table)
+custom_columns <- list(
+  country = colDef(name = "Country"),
+  abs_change = colDef(name = "Absolute change"),
+  rel_change = colDef(name = "Relative change"))
+
+reactable(table,
+          columns = custom_columns)
   
 ```
 
@@ -124,7 +131,7 @@ cantril %>%
 # Create line chart
 
 selected_countries <- cantril %>% 
-  distinct(country, .keep_all = TRUE) %>%
+  distinct(country) %>%
   sample_n(8)
 
 plot <- cantril %>% 
@@ -133,10 +140,13 @@ plot <- cantril %>%
                        x = year,
                        color = country)) +
   geom_line() +
+  geom_point(size = 1) +
   scale_y_continuous(limits = c(0,10)) +
+  scale_x_continuous(n.breaks = 10) +
   labs(title = "Cantril score over time",
        x = "Year",
-       y = "Cantril score") +
+       y = "Cantril score",
+       color = "Country") +
   theme_minimal()
 
 ggplotly(plot)
